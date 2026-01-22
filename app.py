@@ -5,60 +5,62 @@ import io
 import zipfile
 import os
 
-# 1. Configuración de la página y Estilos (CSS)
-st.set_page_config(page_title="Generador F30-1 | Panel Corporativo", page_icon="📑", layout="wide")
-
-# Unificamos el tono de azul y corregimos la visibilidad en los cuadros de carga
-# Color seleccionado: #003366 (Azul corporativo unificado)
+# --- ESTILOS PERSONALIZADOS ACTUALIZADOS ---
 st.markdown("""
     <style>
-        /* 1. Fondo principal y barra lateral unificados */
-        .stApp, [data-testid="stSidebar"], [data-testid="stHeader"] {
+        /* 1. Unificación total de fondos (Sidebar y Cuerpo) */
+        .stApp, [data-testid="stSidebar"], [data-testid="stHeader"], [data-testid="stSidebarNav"] {
             background-color: #003366 !important;
+        }
+
+        /* 2. Forzar texto blanco en toda la aplicación */
+        .stMarkdown, p, span, label, h1, h2, h3, .stWidgetLabel {
             color: white !important;
         }
 
-        /* 2. Ajuste de textos generales */
-        .stMarkdown, p, span, label, h1, h2, h3 {
-            color: white !important;
-        }
-
-        /* 3. Estilo de los cuadros de carga (File Uploader) */
-        /* Ajustamos el fondo y el color del texto para que se vea el nombre del archivo */
+        /* 3. Cuadros de carga (File Uploader) estáticos */
         div[data-testid="stFileUploader"] section {
             background-color: rgba(255, 255, 255, 0.1) !important;
             border: 1px dashed white !important;
             color: white !important;
+            transition: none !important; /* Quita el efecto al pasar el mouse */
         }
         
-        /* Ajuste específico para el texto "Drag and drop file here" y nombres de archivos */
-        div[data-testid="stFileUploader"] label, 
-        div[data-testid="stFileUploader"] div {
+        /* Forzar visibilidad de textos internos del uploader */
+        div[data-testid="stFileUploader"] section div div {
             color: white !important;
         }
 
-        /* 4. Estilo para los botones (Blanco con texto azul) */
+        /* 4. Botones estáticos (Blanco con texto azul) */
         .stButton>button {
             background-color: #ffffff !important;
             color: #003366 !important;
-            border-radius: 5px;
-            font-weight: bold;
-            border: none;
+            border-radius: 5px !important;
+            font-weight: bold !important;
+            border: none !important;
+            transition: none !important; /* Quita el cambio de color al pasar el mouse */
         }
 
-        /* 5. Inputs y Selectbox (Fondo blanco para contraste al escribir) */
+        /* Forzar que el botón no cambie de color al pasar el mouse (hover) o hacer clic (active) */
+        .stButton>button:hover, .stButton>button:active, .stButton>button:focus {
+            background-color: #ffffff !important;
+            color: #003366 !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        /* 5. Selectbox y menús desplegables */
         div[data-baseweb="select"] > div {
             background-color: white !important;
             color: black !important;
         }
         
-        /* 6. Líneas divisorias */
-        hr {
-            border-color: rgba(255, 255, 255, 0.2) !important;
+        /* 6. Quitar bordes rojos o de enfoque de Streamlit */
+        *:focus {
+            outline: none !important;
         }
     </style>
     """, unsafe_allow_html=True)
-
 # --- EL RESTO DEL CÓDIGO PERMANECE IGUAL ---
 # (Asegúrate de mantener las funciones clean_filename, obtener_periodo_anterior, etc.)
 
