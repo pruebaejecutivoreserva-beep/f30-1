@@ -8,40 +8,59 @@ import os
 # 1. Configuración de la página y Estilos (CSS)
 st.set_page_config(page_title="Generador F30-1 | Panel Corporativo", page_icon="📑", layout="wide")
 
-# Inyección de CSS para fondo azul y letras blancas
+# Unificamos el tono de azul y corregimos la visibilidad en los cuadros de carga
+# Color seleccionado: #003366 (Azul corporativo unificado)
 st.markdown("""
     <style>
-        /* Fondo principal */
-        .stApp {
-            background-color: #003366; /* Azul corporativo */
-            color: white;
-        }
-        
-        /* Color de los textos de carga de archivos y etiquetas */
-        .stMarkdown, p, span, label {
+        /* 1. Fondo principal y barra lateral unificados */
+        .stApp, [data-testid="stSidebar"], [data-testid="stHeader"] {
+            background-color: #003366 !important;
             color: white !important;
         }
 
-        /* Personalización de la barra lateral */
-        [data-testid="stSidebar"] {
-            background-color: #002244; /* Azul más oscuro para el sidebar */
-        }
-        
-        /* Estilo para los botones */
-        .stButton>button {
-            background-color: #ffffff;
-            color: #003366;
-            border-radius: 5px;
-            font-weight: bold;
+        /* 2. Ajuste de textos generales */
+        .stMarkdown, p, span, label, h1, h2, h3 {
+            color: white !important;
         }
 
-        /* Inputs y Selectbox */
+        /* 3. Estilo de los cuadros de carga (File Uploader) */
+        /* Ajustamos el fondo y el color del texto para que se vea el nombre del archivo */
+        div[data-testid="stFileUploader"] section {
+            background-color: rgba(255, 255, 255, 0.1) !important;
+            border: 1px dashed white !important;
+            color: white !important;
+        }
+        
+        /* Ajuste específico para el texto "Drag and drop file here" y nombres de archivos */
+        div[data-testid="stFileUploader"] label, 
+        div[data-testid="stFileUploader"] div {
+            color: white !important;
+        }
+
+        /* 4. Estilo para los botones (Blanco con texto azul) */
+        .stButton>button {
+            background-color: #ffffff !important;
+            color: #003366 !important;
+            border-radius: 5px;
+            font-weight: bold;
+            border: none;
+        }
+
+        /* 5. Inputs y Selectbox (Fondo blanco para contraste al escribir) */
         div[data-baseweb="select"] > div {
-            background-color: white;
-            color: black;
+            background-color: white !important;
+            color: black !important;
+        }
+        
+        /* 6. Líneas divisorias */
+        hr {
+            border-color: rgba(255, 255, 255, 0.2) !important;
         }
     </style>
     """, unsafe_allow_html=True)
+
+# --- EL RESTO DEL CÓDIGO PERMANECE IGUAL ---
+# (Asegúrate de mantener las funciones clean_filename, obtener_periodo_anterior, etc.)
 
 # --- FUNCIONES DE LÓGICA ---
 def clean_filename(text):
