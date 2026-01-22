@@ -5,64 +5,57 @@ import io
 import zipfile
 import os
 
-# --- ESTILOS PERSONALIZADOS ACTUALIZADOS ---
+# 1. Configuración de la página
+st.set_page_config(page_title="Generador F30-1 | APS", page_icon="📑", layout="wide")
+
+# 2. Estilos Personalizados (CSS)
 st.markdown("""
     <style>
-        /* 1. Unificación total de fondos (Sidebar y Cuerpo) */
-        .stApp, [data-testid="stSidebar"], [data-testid="stHeader"], [data-testid="stSidebarNav"] {
+        /* Unificación de fondos: Azul APS */
+        .stApp, [data-testid="stSidebar"], [data-testid="stHeader"] {
             background-color: #003366 !important;
         }
 
-        /* 2. Forzar texto blanco en toda la aplicación */
+        /* Texto siempre blanco */
         .stMarkdown, p, span, label, h1, h2, h3, .stWidgetLabel {
             color: white !important;
         }
 
-        /* 3. Cuadros de carga (File Uploader) estáticos */
-        div[data-testid="stFileUploader"] section {
-            background-color: rgba(255, 255, 255, 0.1) !important;
-            border: 1px dashed white !important;
+        /* Botones: Siempre azules con borde blanco para resaltar */
+        .stButton>button {
+            background-color: #003366 !important;
             color: white !important;
-            transition: none !important; /* Quita el efecto al pasar el mouse */
+            border: 2px solid white !important;
+            border-radius: 5px !important;
+            font-weight: bold !important;
+            transition: none !important;
+        }
+
+        /* Evitar que el botón cambie de color al pasar el mouse o hacer clic */
+        .stButton>button:hover, .stButton>button:active, .stButton>button:focus {
+            background-color: #003366 !important;
+            color: white !important;
+            border: 2px solid white !important;
+        }
+
+        /* Cuadros de carga de archivos */
+        div[data-testid="stFileUploader"] section {
+            background-color: rgba(255, 255, 255, 0.05) !important;
+            border: 1px dashed white !important;
         }
         
-        /* Forzar visibilidad de textos internos del uploader */
+        /* Texto interno de los cargadores */
         div[data-testid="stFileUploader"] section div div {
             color: white !important;
         }
 
-        /* 4. Botones estáticos (Blanco con texto azul) */
-        .stButton>button {
-            background-color: #ffffff !important;
-            color: #003366 !important;
-            border-radius: 5px !important;
-            font-weight: bold !important;
-            border: none !important;
-            transition: none !important; /* Quita el cambio de color al pasar el mouse */
-        }
-
-        /* Forzar que el botón no cambie de color al pasar el mouse (hover) o hacer clic (active) */
-        .stButton>button:hover, .stButton>button:active, .stButton>button:focus {
-            background-color: #ffffff !important;
-            color: #003366 !important;
-            border: none !important;
-            box-shadow: none !important;
-        }
-
-        /* 5. Selectbox y menús desplegables */
+        /* Selectbox (Fondo blanco para lectura de opciones) */
         div[data-baseweb="select"] > div {
             background-color: white !important;
             color: black !important;
         }
-        
-        /* 6. Quitar bordes rojos o de enfoque de Streamlit */
-        *:focus {
-            outline: none !important;
-        }
     </style>
     """, unsafe_allow_html=True)
-# --- EL RESTO DEL CÓDIGO PERMANECE IGUAL ---
-# (Asegúrate de mantener las funciones clean_filename, obtener_periodo_anterior, etc.)
 
 # --- FUNCIONES DE LÓGICA ---
 def clean_filename(text):
@@ -96,7 +89,7 @@ def generar_template_excel():
         df_template.to_excel(writer, index=False, sheet_name='Nomina')
     return output.getvalue()
 
-# --- SIDEBAR CON LOGO ---
+# --- SIDEBAR ---
 with st.sidebar:
     if os.path.exists("logo.png"):
         st.image("logo.png", use_container_width=True)
@@ -110,9 +103,15 @@ with st.sidebar:
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
     st.divider()
-    st.info("El sistema buscará faenas del mes anterior al seleccionado.")
+    st.info("El sistema busca faenas del mes anterior al seleccionado.")
 
 # --- CUERPO PRINCIPAL ---
+# Logo también en la pantalla principal
+if os.path.exists("logo.png"):
+    col_logo, _ = st.columns([1, 4])
+    with col_logo:
+        st.image("logo.png", width=200)
+
 st.title("📂 Procesador de Archivos Previred F30-1")
 st.write("Carga los archivos para iniciar la segmentación por obra.")
 
@@ -133,14 +132,11 @@ if excel_file and csv_file:
             df_excel = df_temp[df_temp['periodo'] == periodo_para_buscar].copy()
             
             if df_excel.empty:
-                st.warning(f"No hay datos registrados para el periodo anterior: {periodo_para_buscar}")
+                st.warning(f"No hay datos registrados para {periodo_para_buscar}")
             else:
-                # Limpieza RUT Excel
+                # Limpieza RUT
                 df_excel['rut_limpio'] = df_excel['rut_trabajador'].astype(str).str.replace(r'[^0-9]', '', regex=True).str[:-1]
-                
-                # Carga CSV Previred
                 df_csv = pd.read_csv(csv_file, encoding='latin1', sep=';', header=None)
-                # La columna 0 suele ser el RUT en Previred
                 df_csv['rut_limpio'] = df_csv[0].astype(str).str.replace(r'\D', '', regex=True)
                 
                 archivos_output = []
@@ -166,18 +162,18 @@ if excel_file and csv_file:
                         df_log = pd.DataFrame(log_data)
                         zip_f.writestr(f"log_{clean_filename(periodo_a_generar)}.csv", df_log.to_csv(index=False).encode('utf-8'))
 
-                    st.success(f"✅ Se han generado {len(archivos_output)} archivos correctamente.")
+                    st.success(f"✅ Se han generado {len(archivos_output)} archivos.")
                     st.download_button(
                         label="🎁 Descargar todo en un ZIP",
                         data=zip_buf.getvalue(),
-                        file_name=f"Archivos_F301_{clean_filename(periodo_a_generar)}.zip",
+                        file_name=f"F301_{clean_filename(periodo_a_generar)}.zip",
                         mime="application/zip"
                     )
-                    with st.expander("Ver detalle de registros procesados"):
+                    with st.expander("Ver detalle de registros"):
                         st.dataframe(df_log)
                 else:
-                    st.error("No se encontraron coincidencias entre el Excel y el archivo CSV.")
+                    st.error("Sin coincidencias entre Excel y CSV.")
     except Exception as e:
-        st.error(f"Se produjo un error durante el proceso: {e}")
+        st.error(f"Error: {e}")
 else:
-    st.info("Esperando carga de archivos...")
+    st.info("Esperando archivos...")
