@@ -8,7 +8,7 @@ import os
 # 1. Configuración de la página
 st.set_page_config(page_title="Generador F30-1 | APS", page_icon="📑", layout="wide")
 
-# 2. Estilos Personalizados (CSS) - APS APS APS
+# 2. Estilos Personalizados (CSS) - APS ESTÁTICO TOTAL
 st.markdown("""
     <style>
         /* Unificación de fondo azul APS */
@@ -16,13 +16,13 @@ st.markdown("""
             background-color: #003366 !important;
         }
 
-        /* Texto siempre blanco para legibilidad */
+        /* Texto siempre blanco */
         .stMarkdown, p, span, label, h1, h2, h3, .stWidgetLabel, div {
             color: white !important;
         }
 
-        /* BOTONES: Siempre azules con borde blanco, sin cambios al pasar el mouse */
-        div.stButton > button {
+        /* BOTONES TOTALES: Captura botones de proceso y de descarga (Sidebar y Cuerpo) */
+        button, div.stButton > button, div.stDownloadButton > button {
             background-color: #003366 !important;
             color: white !important;
             border: 2px solid white !important;
@@ -33,10 +33,10 @@ st.markdown("""
             box-shadow: none !important;
         }
 
-        /* Forzar que no cambie el color en hover, active o focus */
-        div.stButton > button:hover, 
-        div.stButton > button:active, 
-        div.stButton > button:focus {
+        /* ELIMINACIÓN DE HOVER: Mantiene el color azul al pasar el mouse o hacer clic */
+        button:hover, button:active, button:focus,
+        div.stButton > button:hover, div.stButton > button:active, div.stButton > button:focus,
+        div.stDownloadButton > button:hover, div.stDownloadButton > button:active, div.stDownloadButton > button:focus {
             background-color: #003366 !important;
             color: white !important;
             border: 2px solid white !important;
@@ -51,14 +51,11 @@ st.markdown("""
             border: 1px dashed white !important;
         }
         
-        /* Botón "Browse files" dentro del uploader */
-        div[data-testid="stFileUploader"] button {
-            background-color: #003366 !important;
+        div[data-testid="stFileUploader"] section div div {
             color: white !important;
-            border: 1px solid white !important;
         }
 
-        /* Selectbox (Fondo blanco con texto negro para poder leer las opciones) */
+        /* Selectbox (Fondo blanco para contraste de lectura) */
         div[data-baseweb="select"] > div {
             background-color: white !important;
             color: black !important;
@@ -69,7 +66,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- FUNCIONES DE LÓGICA (APS) ---
+# --- FUNCIONES DE LÓGICA ---
 def clean_filename(text):
     text = re.sub(r'[\\/*?:"<>|]', "", text)
     return text.replace('\n', ' ').strip().replace(" ", "_")
@@ -118,9 +115,11 @@ with st.sidebar:
     st.info("El sistema buscará faenas del mes anterior al seleccionado.")
 
 # --- CUERPO PRINCIPAL ---
-# Logo APS centrado o alineado a la izquierda
+# Logo alineado a la derecha
 if os.path.exists("logo.png"):
-    st.image("logo.png", width=250)
+    col_vacia, col_logo = st.columns([3, 1])
+    with col_logo:
+        st.image("logo.png", width=200)
 
 st.title("📂 Procesador de Archivos Previred F30-1")
 st.write("Carga los archivos para segmentar automáticamente por obra o faena.")
@@ -134,7 +133,6 @@ with col2:
 if excel_file and csv_file:
     try:
         df_temp = pd.read_excel(excel_file)
-        # Validar columna periodo
         if 'periodo' not in df_temp.columns:
             st.error("Error: El Excel no contiene la columna 'periodo'.")
         else:
@@ -148,17 +146,13 @@ if excel_file and csv_file:
                 if df_excel.empty:
                     st.warning(f"No se encontró información para {periodo_para_buscar} en el Excel.")
                 else:
-                    # Limpieza de RUT
                     df_excel['rut_limpio'] = df_excel['rut_trabajador'].astype(str).str.replace(r'[^0-9]', '', regex=True).str[:-1]
-                    
-                    # Leer CSV Previred
                     df_csv = pd.read_csv(csv_file, encoding='latin1', sep=';', header=None)
                     df_csv['rut_limpio'] = df_csv[0].astype(str).str.replace(r'\D', '', regex=True)
                     
                     archivos_output = []
                     log_data = []
 
-                    # Agrupación por faena
                     for obra, sub_df in df_excel.groupby("obra_faena_servicio"):
                         ruts = sub_df['rut_limpio'].tolist()
                         df_filtrado = df_csv[df_csv['rut_limpio'].isin(ruts)]
@@ -176,7 +170,6 @@ if excel_file and csv_file:
                         with zipfile.ZipFile(zip_buf, "a", zipfile.ZIP_DEFLATED, False) as zip_f:
                             for n, d in archivos_output:
                                 zip_f.writestr(n, d)
-                            
                             df_log = pd.DataFrame(log_data)
                             zip_f.writestr(f"log_{clean_filename(periodo_a_generar)}.csv", df_log.to_csv(index=False).encode('utf-8'))
 
@@ -187,10 +180,6 @@ if excel_file and csv_file:
                             file_name=f"F301_APS_{clean_filename(periodo_a_generar)}.zip",
                             mime="application/zip"
                         )
-                        with st.expander("Ver detalle de trabajadores"):
-                            st.dataframe(df_log)
-                    else:
-                        st.error("No se encontraron coincidencias de RUT para las faenas de este mes.")
     except Exception as e:
         st.error(f"Error técnico: {e}")
 else:
